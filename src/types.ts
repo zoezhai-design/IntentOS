@@ -18,6 +18,7 @@ export interface WorkflowRef {
   name: string
   description: string
   slash: string
+  category: string
 }
 
 export interface MetricItem {
@@ -76,6 +77,10 @@ export interface ChatMessage {
   content: string
   createdAt: string
   artifacts?: Artifact[]
+  /** Dataset ids referenced with @, rendered as chips on the message. */
+  datasets?: string[]
+  /** Workflow id started with /, rendered as a chip on the message. */
+  workflow?: string
 }
 
 export interface HomeSlot {
@@ -88,11 +93,20 @@ export type ScenarioId =
   | 'fintech'
   | 'trading'
   | 'creator'
+  | 'crypto'
   | 'custom'
+
+export interface CustomProfile {
+  name: string
+  datasets: string[]
+  actions: string[]
+}
 
 export interface AppState {
   messages: ChatMessage[]
   savedArtifacts: Artifact[]
-  homeSlots: HomeSlot[]
+  /** Each industry keeps its own pinned workspace tiles. */
+  homeSlotsByScenario: Record<ScenarioId, HomeSlot[]>
   activeScenario: ScenarioId
+  customProfile: CustomProfile
 }

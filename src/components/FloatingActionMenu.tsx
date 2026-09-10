@@ -1,122 +1,113 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Building2,
-  Check,
-  ChevronUp,
   CircleDollarSign,
-  Database,
+  Coins,
   HeartPulse,
   LineChart,
   Palette,
-  Plus,
+  SlidersHorizontal,
   Sparkles,
-  WandSparkles,
 } from 'lucide-react'
 import { SCENARIOS } from '../data/scenarios'
-import type { ScenarioId } from '../types'
+import type { CustomProfile, ScenarioId } from '../types'
+import { CustomPanel } from './CustomPanel'
 
 const ICONS = {
-  healthcare: HeartPulse,
   fintech: CircleDollarSign,
   trading: LineChart,
+  healthcare: HeartPulse,
   creator: Palette,
+  crypto: Coins,
   custom: Building2,
 }
 
+const ORDER: ScenarioId[] = [
+  'fintech',
+  'trading',
+  'healthcare',
+  'creator',
+  'crypto',
+]
+
 interface FloatingActionMenuProps {
   activeScenario: ScenarioId
+  customProfile: CustomProfile
   onScenarioChange: (scenario: ScenarioId) => void
+  onSaveCustomProfile: (profile: CustomProfile) => void
+  onRunDemo: () => void
 }
 
 export function FloatingActionMenu({
   activeScenario,
+  customProfile,
   onScenarioChange,
+  onSaveCustomProfile,
+  onRunDemo,
 }: FloatingActionMenuProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const [customizing, setCustomizing] = useState(false)
 
-  useEffect(() => {
-    function close(event: MouseEvent) {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [])
-
-  const selected = SCENARIOS.find((item) => item.id === activeScenario)!
-  const SelectedIcon = ICONS[activeScenario]
-
-  function openBuilder() {
-    onScenarioChange('custom')
-    navigate('/console')
-    setOpen(false)
+  function runDemo() {
+    navigate('/')
+    onRunDemo()
   }
 
   return (
-    <div className="floating-actions" ref={ref}>
-      {open && (
-        <div className="floating-menu">
-          <div className="floating-menu-head">
-            <span>Switch enterprise scenario</span>
-            <small>Content and context update instantly</small>
-          </div>
-          <div className="scenario-list">
-            {SCENARIOS.map((scenario) => {
-              const Icon = ICONS[scenario.id]
-              return (
-                <button
-                  key={scenario.id}
-                  className={scenario.id === activeScenario ? 'selected' : ''}
-                  onClick={() => {
-                    onScenarioChange(scenario.id)
-                    setOpen(false)
-                  }}
-                >
-                  <span className="scenario-icon">
-                    <Icon size={16} />
-                  </span>
-                  <span>
-                    <strong>{scenario.shortName}</strong>
-                    <small>{scenario.description}</small>
-                  </span>
-                  {scenario.id === activeScenario && <Check size={15} />}
-                </button>
-              )
-            })}
-          </div>
-          <div className="floating-menu-custom">
-            <button onClick={openBuilder}>
-              <Plus size={15} />
-              Add custom action
-            </button>
-            <button onClick={openBuilder}>
-              <Database size={15} />
-              Connect database
-            </button>
-            <button onClick={openBuilder}>
-              <WandSparkles size={15} />
-              Build new interface
-            </button>
-          </div>
+    <>
+      <div className="industry-dock">
+        <div
+          className="segmented"
+          role="tablist"
+          aria-label="Industry example interface"
+        >
+          {ORDER.map((id) => {
+            const scenario = SCENARIOS.find((item) => item.id === id)!
+            const Icon = ICONS[id]
+            const selected = activeScenario === id
+            return (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={selected}
+                className={selected ? 'selected' : ''}
+                onClick={() => onScenarioChange(id)}
+                title={scenario.name}
+              >
+                <Icon size={13} />
+                <span>{scenario.shortName}</span>
+              </button>
+            )
+          })}
+          <button
+            role="tab"
+            aria-selected={activeScenario === 'custom'}
+            className={activeScenario === 'custom' ? 'selected' : ''}
+            onClick={() => setCustomizing(true)}
+            title="Customize with your own data and actions"
+          >
+            <SlidersHorizontal size={13} />
+            <span>{customProfile.name || 'Custom'}</span>
+          </button>
         </div>
-      )}
 
-      <button
-        className="floating-trigger"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span className="floating-trigger-icon">
-          {open ? <Sparkles size={17} /> : <SelectedIcon size={17} />}
-        </span>
-        <span>
-          <small>Scenario</small>
-          <strong>{selected.shortName}</strong>
-        </span>
-        <ChevronUp className={open ? '' : 'closed'} size={16} />
-      </button>
-    </div>
+        <button className="ai-cta" onClick={runDemo}>
+          <Sparkles size={15} />
+          Run example
+        </button>
+      </div>
+
+      <CustomPanel
+        open={customizing}
+        profile={customProfile}
+        onClose={() => setCustomizing(false)}
+        onSave={(profile) => {
+          onSaveCustomProfile(profile)
+          setCustomizing(false)
+          navigate('/')
+        }}
+      />
+    </>
   )
 }
