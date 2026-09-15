@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
 import {
-  ArrowRight,
-  Bot,
   CheckCircle2,
   ChevronRight,
   Clock3,
@@ -11,8 +9,9 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { getScenario } from '../data/scenarios'
-import type { Artifact, HomeSlot, ScenarioId } from '../types'
+import type { Artifact, CustomProfile, HomeSlot, ScenarioId } from '../types'
 import { ArtifactCard } from '../components/ArtifactCard'
+import { LibraryPicker } from '../components/LibraryPicker'
 
 interface HomePageProps {
   slots: HomeSlot[]
@@ -20,6 +19,7 @@ interface HomePageProps {
   library: Artifact[]
   placedIds: Set<string>
   activeScenario: ScenarioId
+  customProfile: CustomProfile
   onAssign: (slotId: string, artifactId: string | null) => void
 }
 
@@ -29,10 +29,12 @@ export function HomePage({
   library,
   placedIds,
   activeScenario,
+  customProfile,
   onAssign,
 }: HomePageProps) {
-  const scenario = getScenario(activeScenario)
+  const scenario = getScenario(activeScenario, customProfile)
   const liveCount = slots.filter((s) => s.artifactId).length
+  const firstEmptySlot = slots.find((slot) => !slot.artifactId)
 
   return (
     <div className="enterprise-page page-width">
@@ -46,30 +48,11 @@ export function HomePage({
           <span className="system-status">
             <span /> {scenario.status}
           </span>
-          <Link to="/console" className="btn btn-primary">
+          <Link to="/" className="btn btn-primary">
             <Sparkles size={14} /> Ask Intent
           </Link>
         </div>
       </header>
-
-      <section className="enterprise-command">
-        <div className="command-icon"><Bot size={18} /></div>
-        <div>
-          <span>Start with an intention</span>
-          <strong>{scenario.prompt}</strong>
-        </div>
-        <Link to="/console"><ArrowRight size={18} /></Link>
-      </section>
-
-      <section className="enterprise-metrics">
-        {scenario.metrics.map((metric) => (
-          <article key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <small>{metric.delta}</small>
-          </article>
-        ))}
-      </section>
 
       <div className="enterprise-layout">
         <section className="enterprise-main">
@@ -78,7 +61,17 @@ export function HomePage({
               <h2>Workspace</h2>
               <p>{liveCount} active views configured for this operating surface</p>
             </div>
-            <Link to="/saved">Manage saved work <ChevronRight size={14} /></Link>
+            <div className="panel-head-actions">
+              <LibraryPicker
+                library={library}
+                placedIds={placedIds}
+                disabled={library.length === 0 || !firstEmptySlot}
+                label="Add card"
+                onPick={(artifactId) => {
+                  if (firstEmptySlot) onAssign(firstEmptySlot.id, artifactId)
+                }}
+              />
+            </div>
           </div>
 
           <div className="workspace-grid">
@@ -103,37 +96,16 @@ export function HomePage({
               return (
                 <div key={slot.id} className="workspace-slot empty">
                   <div className="empty-slot-inner">
-                    <div className="empty-icon">
-                      <Plus size={18} />
-                    </div>
-                    <h3>Add saved work</h3>
-                    <p>Place a reusable artifact on this workspace.</p>
-                    <label className="slot-select">
-                      <select
-                        defaultValue=""
-                        onChange={(e) => {
-                          const value = e.target.value
-                          if (value) onAssign(slot.id, value)
-                          e.target.value = ''
-                        }}
-                      >
-                        <option value="" disabled>
-                          {library.length
-                            ? 'Choose from library'
-                            : 'Library is empty'}
-                        </option>
-                        {library.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.title}
-                            {placedIds.has(item.id) ? ' — on workspace' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {library.length === 0 && (
-                      <Link to="/console" className="link-arrow sm">
-                        Generate one in Console <ChevronRight size={15} />
-                      </Link>
+                    <h3>Empty slot</h3>
+                    {library.length > 0 ? (
+                      <p>Use Add card above to place a saved artifact here.</p>
+                    ) : (
+                      <>
+                        <p>Nothing saved yet.</p>
+                        <Link to="/" className="link-arrow sm">
+                          Generate one in Console <ChevronRight size={15} />
+                        </Link>
+                      </>
                     )}
                   </div>
                 </div>
@@ -163,7 +135,7 @@ export function HomePage({
                 </div>
               ))}
             </div>
-            <Link className="panel-link" to="/console">
+            <Link className="panel-link" to="/">
               Create workflow <Plus size={14} />
             </Link>
           </section>
@@ -188,7 +160,7 @@ export function HomePage({
                 </div>
               ))}
             </div>
-            <Link className="panel-link" to="/console">
+            <Link className="panel-link" to="/">
               Connect source <Plus size={14} />
             </Link>
           </section>
@@ -197,7 +169,7 @@ export function HomePage({
 
       <footer className="enterprise-footer">
         <span>Content adapts to the selected enterprise scenario.</span>
-        <Link to="/saved">{library.length} items in Saved Work</Link>
+        <Link to="/library">{library.length} items in Library</Link>
       </footer>
     </div>
   )

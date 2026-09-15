@@ -31,11 +31,11 @@ export function SavedWorkPage({
     <div className="saved-page page-width">
       <header className="saved-hero">
         <div>
-          <p className="workspace-kicker">Library</p>
-          <h1>Saved Work</h1>
+          <p className="workspace-kicker">Saved work</p>
+          <h1>Library</h1>
           <p>Every reusable artifact generated across your enterprise workspace.</p>
         </div>
-        <Link to="/console" className="btn btn-primary">
+        <Link to="/" className="btn btn-primary">
           <Sparkles size={14} /> Generate new
         </Link>
       </header>

@@ -85,14 +85,16 @@ export function ArtifactCard({
           )}
           {saved && onUnsave && (
             <button
-              className="btn btn-secondary"
+              className="icon-ghost"
               onClick={() => onUnsave(artifact.id)}
+              title="Unsave"
+              aria-label="Unsave"
             >
-              <Pin size={14} /> Saved
+              <Pin size={12} />
             </button>
           )}
           {saved && !onUnsave && !onRemoveFromHome && (
-            <span className="chip tint-green">
+            <span className="chip tint-neutral">
               <Pin size={12} /> Saved
             </span>
           )}
